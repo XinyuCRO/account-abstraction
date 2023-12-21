@@ -12,6 +12,8 @@ const mnemonicFileName = process.env.MNEMONIC_FILE ?? `${process.env.HOME}/.secr
 let mnemonic = 'test '.repeat(11) + 'junk'
 if (fs.existsSync(mnemonicFileName)) { mnemonic = fs.readFileSync(mnemonicFileName, 'ascii') }
 
+mnemonic = "visit craft resemble online window solution west chuckle music diesel vital settle comic tribe project blame bulb armed flower region sausage mercy arrive release"
+
 function getNetwork1 (url: string): { url: string, accounts: { mnemonic: string } } {
   return {
     url,
@@ -50,6 +52,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     dev: { url: 'http://localhost:8545' },
+    cronos: { url: 'http://127.0.0.1:26651' },
     // github action starts localgeth service, for gas calculations
     localgeth: { url: 'http://localgeth:8545' },
     goerli: getNetwork('goerli'),

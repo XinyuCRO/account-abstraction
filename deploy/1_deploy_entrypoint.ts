@@ -1,39 +1,36 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
-import { Create2Factory } from '../src/Create2Factory'
 import { ethers } from 'hardhat'
 
 const deployEntryPoint: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const provider = ethers.provider
-  const from = await provider.getSigner().getAddress()
-  await new Create2Factory(ethers.provider).deployFactory()
 
-  const ret = await hre.deployments.deploy(
-    'EntryPoint', {
-      from,
-      args: [],
-      gasLimit: 6e6,
-      deterministicDeployment: true
-    })
-  console.log('==entrypoint addr=', ret.address)
-/*
-  const entryPointAddress = ret.address
-  const w = await hre.deployments.deploy(
-    'SimpleAccount', {
-      from,
-      args: [entryPointAddress, from],
-      gasLimit: 2e6,
-      deterministicDeployment: true
-    })
+  let EntryPointFactory = await ethers.getContractFactory('EntryPoint');
+  EntryPointFactory = EntryPointFactory.connect(provider.getSigner())
 
-  console.log('== wallet=', w.address)
+  let nonce = await provider.getSigner().getTransactionCount();
+  console.log('==nonce=', nonce);
 
-  const t = await hre.deployments.deploy('TestCounter', {
-    from,
-    deterministicDeployment: true
+
+  const tx = await EntryPointFactory.deploy({
+    gasLimit: 6e6,
+    nonce,
   })
-  console.log('==testCounter=', t.address)
-  */
+
+  let entryPointAddress = tx.address;
+
+  // deploy SimpleAccountFactory
+  let SimpleAccountFactory = await ethers.getContractFactory('SimpleAccountFactory');
+  SimpleAccountFactory = SimpleAccountFactory.connect(provider.getSigner())
+  const tx2 = await SimpleAccountFactory.deploy(entryPointAddress, {
+    gasLimit: 6e6,
+    nonce: nonce + 1,
+  })
+
+  console.log(`
+ENTRY_POINTS=${entryPointAddress}
+ACCOUNT_FACTORY=${tx2.address}
+  `)
 }
 
 export default deployEntryPoint
